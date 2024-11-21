@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:shopping/ui/payment_button.dart';
 
 import '../model/cart_model.dart';
-import '../paypal/paypal.dart';
+// import '../paypal/paypal.dart';
+import '../paypal/check_out_page.dart';
 import '../provider/cart_provider.dart';
 import '../service/db_helper.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({Key? key}) : super(key: key);
+  const CartScreen({super.key});
 
   @override
   _CartScreenState createState() => _CartScreenState();
@@ -17,6 +19,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
 
   DBHelper? dbHelper = DBHelper();
+
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +35,6 @@ class _CartScreenState extends State<CartScreen> {
                 builder: (context, value , child){
                   return Text(value.getCounter().toString(),style: const TextStyle(color: Colors.white));
                 },
-
               ),
               child: const Icon(Icons.shopping_bag_outlined),
             ),
@@ -87,7 +89,7 @@ class _CartScreenState extends State<CartScreen> {
                                             width: 100,
                                             image: NetworkImage(snapshot.data![index].image.toString()),
                                           ),
-                                          SizedBox(width: 10,),
+                                          const SizedBox(width: 10,),
                                           Expanded(
                                             child: Column(
                                               mainAxisAlignment: MainAxisAlignment.start,
@@ -97,7 +99,7 @@ class _CartScreenState extends State<CartScreen> {
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
                                                     Text(snapshot.data![index].productName.toString() ,
-                                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                                                     ),
                                                     InkWell(
                                                         onTap: (){
@@ -105,15 +107,15 @@ class _CartScreenState extends State<CartScreen> {
                                                           cart.removerCounter();
                                                           cart.removeTotalPrice(double.parse(snapshot.data![index].productPrice.toString()));
                                                         },
-                                                        child: Icon(Icons.delete))
+                                                        child: const Icon(Icons.delete))
                                                   ],
                                                 ),
 
-                                                SizedBox(height: 5,),
+                                                const SizedBox(height: 5,),
                                                 Text(snapshot.data![index].unitTag.toString() +" "+r"$"+ snapshot.data![index].productPrice.toString() ,
-                                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                                                 ),
-                                                SizedBox(height: 5,),
+                                                const SizedBox(height: 5,),
                                                 Align(
                                                   alignment: Alignment.centerRight,
                                                   child: InkWell(
@@ -134,7 +136,6 @@ class _CartScreenState extends State<CartScreen> {
                                                           children: [
                                                             InkWell(
                                                                 onTap: (){
-
                                                                   int quantity =  snapshot.data![index].quantity! ;
                                                                   int price = snapshot.data![index].initialPrice!;
                                                                   quantity--;
@@ -161,8 +162,8 @@ class _CartScreenState extends State<CartScreen> {
                                                                   }
 
                                                                 },
-                                                                child: Icon(Icons.remove , color: Colors.white,)),
-                                                            Text( snapshot.data![index].quantity.toString(), style: TextStyle(color: Colors.white)),
+                                                                child: const Icon(Icons.remove , color: Colors.white,)),
+                                                            Text( snapshot.data![index].quantity.toString(), style: const TextStyle(color: Colors.white)),
                                                             InkWell(
                                                                 onTap: (){
                                                                   int quantity =  snapshot.data![index].quantity! ;
@@ -188,8 +189,7 @@ class _CartScreenState extends State<CartScreen> {
                                                                     print(error.toString());
                                                                   });
                                                                 },
-                                                                child: Icon(Icons.add , color: Colors.white,)),
-
+                                                                child: const Icon(Icons.add , color: Colors.white,)),
                                                           ],
                                                         ),
                                                       ),
@@ -211,27 +211,39 @@ class _CartScreenState extends State<CartScreen> {
                     }
 
                   }
-                  return Text('') ;
+                  return const Text('') ;
                 }),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CheckoutPage()),
-                  );
-                },
-                child: Text('Go to Checkout'),
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (cart.counter != 0) ...[ // Kiểm tra xem giỏ hàng có sản phẩm không
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(Colors.teal),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const CheckoutPage()),
+                        );
+                      },
+                      child: const Text('Go to Checkout', style: TextStyle(fontSize: 17, color: Colors.white)),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: PaymentButton(),
+                  ),
+                ],
+              ],
             ),
             Consumer<CartProvider>(builder: (context, value, child){
               return Visibility(
                 visible: value.getTotalPrice().toStringAsFixed(2) == "0.00" ? false : true,
                 child: Column(
                   children: [
-                    ReusableWidget(title: 'Sub Total', value: r'$'+value.getTotalPrice().toStringAsFixed(2),),
-                    ReusableWidget(title: 'Discout 5%', value: r'$'+'20',),
                     ReusableWidget(title: 'Total', value: r'$'+value.getTotalPrice().toStringAsFixed(2),)
                   ],
                 ),
@@ -247,17 +259,17 @@ class _CartScreenState extends State<CartScreen> {
 
 class ReusableWidget extends StatelessWidget {
   final String title , value ;
-  const ReusableWidget({required this.title, required this.value});
+  const ReusableWidget({super.key, required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 30),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title , style: Theme.of(context).textTheme.titleSmall,),
-          Text(value.toString() , style: Theme.of(context).textTheme.titleSmall,)
+          Text(title , style: Theme.of(context).textTheme.titleSmall?.copyWith(fontSize: 20)),
+          Text(value.toString() , style: Theme.of(context).textTheme.titleSmall?.copyWith(fontSize: 20))
         ],
       ),
     );
